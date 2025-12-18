@@ -1,0 +1,65 @@
+# 虚拟环境
+venv/
+env/
+ENV/
+.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# 数据文件
+data/raw/
+data/processed/
+*.csv
+*.mat
+*.npz
+*.npy
+*.pkl
+
+# 模型文件
+models/
+*.h5
+*.model
+*.joblib
+
+# 日志
+logs/
+*.log
+
+# 环境变量
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 测试
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Neo4j
+neo4j_data/
+
+# Redis
+dump.rdb

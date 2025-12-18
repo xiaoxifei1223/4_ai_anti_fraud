@@ -1,0 +1,240 @@
+# 反欺诈规则配置文件
+# 规则会按照 priority 从高到低执行
+# 所有条件满足时触发规则
+
+# 规则类型说明:
+# - amount: 金额相关规则
+# - frequency: 频率相关规则  
+# - device: 设备相关规则
+# - location: 地理位置相关规则
+# - behavior: 行为模式规则
+# - blacklist: 黑名单规则
+
+rules:
+  # ===== 金额相关规则 =====
+  
+  - rule_id: RULE_AMOUNT_001
+    rule_name: 超大额交易
+    rule_type: amount
+    priority: 100
+    weight: 0.8
+    is_active: true
+    description: 单笔交易金额超过10000元，需要人工审核
+    conditions:
+      amount_gt: 10000
+    action: 
+      decision: reject
+      reason: 单笔交易金额过大
+
+  - rule_id: RULE_AMOUNT_002
+    rule_name: 大额交易
+    rule_type: amount
+    priority: 90
+    weight: 0.6
+    is_active: true
+    description: 单笔交易金额在5000-10000元之间
+    conditions:
+      amount_gte: 5000
+      amount_lt: 10000
+    action:
+      decision: review
+      reason: 大额交易需要额外验证
+
+  - rule_id: RULE_AMOUNT_003
+    rule_name: 小额高频
+    rule_type: amount
+    priority: 80
+    weight: 0.5
+    is_active: true
+    description: 单笔小于100元但1小时内超过10笔
+    conditions:
+      amount_lt: 100
+      count_1h_gt: 10
+    action:
+      decision: review
+      reason: 小额高频交易异常
+
+  # ===== 频率相关规则 =====
+
+  - rule_id: RULE_FREQ_001
+    rule_name: 短时高频交易
+    rule_type: frequency
+    priority: 95
+    weight: 0.7
+    is_active: true
+    description: 1分钟内交易超过3笔
+    conditions:
+      count_1m_gt: 3
+    action:
+      decision: reject
+      reason: 交易频率异常
+
+  - rule_id: RULE_FREQ_002
+    rule_name: 小时内高频
+    rule_type: frequency
+    priority: 85
+    weight: 0.6
+    is_active: true
+    description: 1小时内交易超过20笔
+    conditions:
+      count_1h_gt: 20
+    action:
+      decision: review
+      reason: 小时内交易频率过高
+
+  - rule_id: RULE_FREQ_003
+    rule_name: 深夜交易
+    rule_type: frequency
+    priority: 70
+    weight: 0.4
+    is_active: true
+    description: 凌晨2-5点交易
+    conditions:
+      time_between:
+        start: "02:00"
+        end: "05:00"
+    action:
+      decision: review
+      reason: 深夜交易时间异常
+
+  # ===== 设备相关规则 =====
+
+  - rule_id: RULE_DEVICE_001
+    rule_name: 多账户共享设备
+    rule_type: device
+    priority: 88
+    weight: 0.65
+    is_active: true
+    description: 同一设备在短时间内被多个账户使用
+    conditions:
+      device_user_count_1h_gt: 3
+    action:
+      decision: review
+      reason: 设备共享异常
+
+  - rule_id: RULE_DEVICE_002
+    rule_name: 新设备首次交易
+    rule_type: device
+    priority: 60
+    weight: 0.3
+    is_active: true
+    description: 新设备首次交易且金额较大
+    conditions:
+      is_new_device: true
+      amount_gt: 1000
+    action:
+      decision: review
+      reason: 新设备大额交易
+
+  # ===== 地理位置规则 =====
+
+  - rule_id: RULE_LOCATION_001
+    rule_name: 异地快速切换
+    rule_type: location
+    priority: 92
+    weight: 0.75
+    is_active: true
+    description: 短时间内在不同城市交易
+    conditions:
+      location_distance_km_gt: 500
+      time_diff_minutes_lt: 60
+    action:
+      decision: reject
+      reason: 地理位置异常切换
+
+  - rule_id: RULE_LOCATION_002
+    rule_name: 境外交易
+    rule_type: location
+    priority: 75
+    weight: 0.5
+    is_active: true
+    description: 境外IP或定位
+    conditions:
+      is_foreign: true
+    action:
+      decision: review
+      reason: 境外交易需验证
+
+  # ===== 行为模式规则 =====
+
+  - rule_id: RULE_BEHAVIOR_001
+    rule_name: 连续失败后成功
+    rule_type: behavior
+    priority: 90
+    weight: 0.7
+    is_active: true
+    description: 短时间内多次失败后突然成功
+    conditions:
+      failed_count_10m_gt: 3
+    action:
+      decision: review
+      reason: 疑似密码试探行为
+
+  - rule_id: RULE_BEHAVIOR_002
+    rule_name: 首次交易大额
+    rule_type: behavior
+    priority: 65
+    weight: 0.4
+    is_active: true
+    description: 新用户首次交易金额过大
+    conditions:
+      is_first_transaction: true
+      amount_gt: 2000
+    action:
+      decision: review
+      reason: 新用户首次大额交易
+
+  # ===== 黑名单规则 =====
+
+  - rule_id: RULE_BLACKLIST_001
+    rule_name: IP黑名单
+    rule_type: blacklist
+    priority: 100
+    weight: 1.0
+    is_active: true
+    description: IP在黑名单中
+    conditions:
+      ip_in_blacklist: true
+    action:
+      decision: reject
+      reason: IP地址已被加入黑名单
+
+  - rule_id: RULE_BLACKLIST_002
+    rule_name: 设备黑名单
+    rule_type: blacklist
+    priority: 100
+    weight: 1.0
+    is_active: true
+    description: 设备在黑名单中
+    conditions:
+      device_in_blacklist: true
+    action:
+      decision: reject
+      reason: 设备已被加入黑名单
+
+  - rule_id: RULE_BLACKLIST_003
+    rule_name: 用户黑名单
+    rule_type: blacklist
+    priority: 100
+    weight: 1.0
+    is_active: true
+    description: 用户在黑名单中
+    conditions:
+      user_in_blacklist: true
+    action:
+      decision: reject
+      reason: 用户已被加入黑名单
+
+# 规则组合策略
+rule_strategy:
+  # 触发多少条高优先级规则时直接拒绝
+  auto_reject_high_priority_count: 2
+  
+  # 触发多少条中优先级规则时需要审核
+  auto_review_medium_priority_count: 3
+  
+  # 规则权重总和超过多少时拒绝
+  reject_weight_threshold: 1.5
+  
+  # 规则权重总和超过多少时审核
+  review_weight_threshold: 0.8
